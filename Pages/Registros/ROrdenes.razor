@@ -1,0 +1,275 @@
+﻿
+@page "/Ordenes"
+
+@using RegistroPedidos.BLL
+@using  RegistroPedidos.Models
+@using Blazored.Toast
+@using Blazored.Toast.Services
+
+@inject IToastService toast
+<EditForm Model="Orden" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="card" style="align-self:self-start">
+        <div class="card-header text-center">
+            <div class="card-header" style="background-color: #79CAFF; text-align: center">
+                <h3>Registro de Moras</h3>
+            </div>
+            <div class="card-body" style="align-self:self-start">
+                <form>
+                    @*OrdenId*@
+                    <div class="form-row align-items-lg-start">
+                        <div class="col">
+                            <div class="form-inline">
+                                <label><strong>Orden Id</strong></label>
+                                <hr />
+                                <div class="input-group">
+                                    <InputNumber @bind-Value="@Orden.OrdenId" class="form-control col-5" />
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-toolbar input-group-text" @onclick="Buscar"><span class="oi oi-magnifying-glass"></span>Buscar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+
+                    @*Fecha*@
+                    <div class="col">
+                        <div class="form-inline align-content-between">
+                            <label><strong>Fecha</strong></label>
+                            <hr />
+                            <div class="d-flex justify-content-between">
+                                <InputDate @bind-Value="@Orden.Fecha" class="form control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @*Suplidor*@
+                    <div class="form-row align-items-lg-start">
+                        <div class="col">
+                            <div class="form-inline">
+                                <label><strong>Suplidor</strong></label>
+                                <hr />
+                                <div class="input-group">
+                                    <Select class="form-control w-100 pl-1" bind-value="@Detalle.DetalleId" @onchange="@OnProductoChanged">
+                                        <option value="0">Seleccione un Suplidor</option>
+                                        @foreach (Suplidores suplidores in SuplidoresBLL.GetList(p => true))
+                                        {
+                                            <option value=@(suplidores.SuplidorId)> @(suplidores.Nombres) </option>
+                                        }
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @*Monto*@
+                    <div class="form-row align-items-lg-start">
+                        <div class="col">
+                            <div class="form-inline">
+                                <label><strong>Monto</strong></label>
+                                <hr />
+                                <div class="input-group">
+                                    <InputNumber @bind-Value="@Orden.Monto" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+
+                    <fieldset class="m-0 mt-1 border-dark">
+                        <legend>Detalle Orden</legend>
+
+                        <div class="d-flex flex-row justify-content-between">
+
+                            @*Producto*@
+                            <div class="d-flex flex-column col-3">
+                                Producto:
+                                <select class="input-group p-1" bind-value="@Detalle.DetalleId" @onchange="@OnProductoChanged">
+                                    <option value="0">Seleccione un filtro</option>
+                                    @foreach (Productos productos in ProductosBLL.GetList(p => true))
+                                    {
+                                        <option value=@(productos.ProductoId)> @(productos.Descripcion) </option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="d-flex flex-column">
+                                Cantidad:
+                                <input class="input-group" type="text" @bind-value="@Detalle.Cantidad" />
+                            </div>
+
+                            @*Costo*@
+                            <div class="d-flex flex-column">
+                                Costo:
+                                <input class="input-group" readonly type="text" @bind-value="@Detalle.Costo" />
+                            </div>
+
+                            <div class="d-flex flex-row justify-content-end align-items-end">
+                                <button type="button" class="btn btn-toolbar input-group-text" @onclick="Agregar"><span class="oi oi-plus"></span>Agregar</button>
+                            </div>
+                        </div>
+
+                        <div class="col mt-2">
+                            <table class="table table-bordered border-dark">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Costo</th>
+                                    <th>        </th>
+                                </tr>
+
+                                @foreach (OrdenesDetalle detalle in Orden.OrdenesDetalle)
+                                {
+                                    <tr>
+                                        <td>@ProductosBLL.Buscar(detalle.ProductoId).Descripcion</td>
+                                        <td>@detalle.Cantidad</td>
+                                        <td>@detalle.Costo</td>
+                                        <td>
+                                            <button class="btn btn-danger" type="button" @onclick="() => Remover(detalle)">
+                                                <i class="oi oi-trash mr-2" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </fieldset>
+                    <hr />
+
+
+                    <br />
+                    <br />
+                    @*Botones*@
+                    <div class="card-footer d-flex flex-column flex-sm-column flex-md-row flex-xl-row flex-lg-row justify-content-around">
+                        <div class="form-inline" display: inline-blocks>
+                            <button type="button" class="btn btn-outline-primary" @onclick="Nuevo"><span class="oi oi-file mr-2"></span>Nuevo</button>
+                            &nbsp;&nbsp;
+                            <button type="button" class="btn btn-outline-primary" @onclick="Guardar"><span class="oi oi-account-login mr-2"></span>Guardar</button>
+                            &nbsp;&nbsp;
+                            <button type="button" class="btn btn-outline-primary" @onclick="Eliminar"><span class="oi oi-trash mr-2"></span>Eliminar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int OrdenId { get; set; }
+
+    public Ordenes Orden { get; set; }
+
+    public OrdenesDetalle Detalle { get; set; }
+
+    public int ProductoId { get; set; }
+
+    public float Cantidad { get; set; }
+
+    public float Costo { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Nuevo();
+        Buscar();
+    }
+
+    public void Nuevo()
+    {
+        Orden = new Ordenes();
+        OrdenId = 0;
+        Detalle = new OrdenesDetalle();
+        Cantidad = 0;
+        Costo = 0;
+    }
+
+    public void OnProductoChanged(ChangeEventArgs e)
+    {
+        if (Convert.ToInt32(e.Value) != 0)
+        {
+            Detalle.ProductoId = Convert.ToInt32(e.Value);
+
+            Detalle.Costo = ProductosBLL.Buscar(Detalle.ProductoId).Inventario;
+        }
+    }
+
+    public void Buscar()
+    {
+        if (Orden.OrdenId > 0)
+        {
+            var encontrado = OrdenesBLL.Buscar(Orden.OrdenId);
+            if (encontrado != null)
+            {
+                this.Orden = encontrado;
+                var count = Orden.OrdenesDetalle.Count;
+                Console.Write(count);
+            }
+            else
+            {
+                toast.ShowWarning("No Encontrado");
+            }
+        }
+    }
+
+    public void Agregar()
+    {
+        Orden.OrdenesDetalle.Add(Detalle);
+        Detalle = new OrdenesDetalle();
+        Cantidad = 0;
+        Costo = 0;
+
+        Orden.Monto = 0;
+        foreach (OrdenesDetalle detalle in Orden.OrdenesDetalle)
+        {
+            Orden.Monto += (detalle.Costo * detalle.Cantidad);
+        }
+    }
+
+    public void Remover(OrdenesDetalle Detalle)
+    {
+        Orden.OrdenesDetalle.Remove(Detalle);
+
+        Orden.Monto = 0;
+        foreach (OrdenesDetalle detalle in Orden.OrdenesDetalle)
+        {
+            Orden.Monto += (detalle.Costo * detalle.Cantidad);
+        }
+    }
+
+    public void Guardar()
+    {
+        bool guardo;
+
+        guardo = OrdenesBLL.Guardar(Orden);
+
+        if (guardo)
+        {
+            Nuevo();
+            toast.ShowSuccess("Guardado correctamente");
+        }
+        else
+        {
+            toast.ShowError("No se pudo guardar.");
+        }
+    }
+
+    public void Eliminar()
+    {
+        bool elimino;
+
+        elimino = OrdenesBLL.Eliminar(Orden.OrdenId);
+
+        if (elimino)
+        {
+            Nuevo();
+            toast.ShowSuccess("Eliminado correctamente");
+        }
+        else
+        {
+            toast.ShowError("No se pudo eliminar.");
+        }
+    }
+}
